@@ -2,43 +2,10 @@ use crate::config::ProtocolId;
 use crate::utils::interval;
 use bytes::{Bytes, BytesMut};
 use futures::prelude::*;
-use generic_proto::{GenericProto, GenericProtoOut};
 use libp2p::{Multiaddr, PeerId};
 use libp2p::core::{ConnectedPoint, connection::{ConnectionId, ListenerId}};
 use libp2p::swarm::{ProtocolsHandler, IntoProtocolsHandler};
 use libp2p::swarm::{NetworkBehaviour, NetworkBehaviourAction, PollParameters};
-use sp_core::{
-	storage::{StorageKey, ChildInfo},
-	hexdisplay::HexDisplay
-};
-use sp_consensus::{
-	BlockOrigin,
-	block_validation::BlockAnnounceValidator,
-	import_queue::{BlockImportResult, BlockImportError, IncomingBlock, Origin}
-};
-use codec::{Decode, Encode};
-use sp_runtime::{generic::BlockId, ConsensusEngineId, Justification};
-use sp_runtime::traits::{
-	Block as BlockT, Header as HeaderT, NumberFor, One, Zero, CheckedSub
-};
-use sp_arithmetic::traits::SaturatedConversion;
-use message::{BlockAnnounce, Message};
-use message::generic::{Message as GenericMessage, ConsensusMessage, Roles};
-use prometheus_endpoint::{Registry, Gauge, GaugeVec, HistogramVec, PrometheusError, Opts, register, U64};
-use sync::{ChainSync, SyncState};
-use crate::service::{TransactionPool, ExHashT};
-use crate::config::BoxFinalityProofRequestBuilder;
-use std::borrow::Cow;
-use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
-use std::sync::Arc;
-use std::fmt::Write;
-use std::{cmp, io, num::NonZeroUsize, pin::Pin, task::Poll, time};
-use log::{log, Level, trace, debug, warn, error};
-use crate::chain::{Client, FinalityProofProvider};
-use sc_client_api::{ChangesProof, StorageProof};
-use crate::error;
-use util::LruHashSet;
-use wasm_timer::Instant;
 
 // Include sources generated from protobuf definitions.
 pub mod api {
@@ -50,18 +17,16 @@ pub mod api {
 	}
 }
 
-mod generic_proto;
-mod util;
-
-pub mod block_requests;
-pub mod message;
-pub mod event;
-pub mod light_client_handler;
-pub mod sync;
+mod behav;
 
 pub use block_requests::BlockRequests;
 pub use light_client_handler::LightClientHandler;
 pub use generic_proto::LegacyConnectionKillError;
+use std::borrow::Cow;
+use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
+use std::sync::Arc;
+use std::fmt::Write;
+use std::{cmp, io, num::NonZeroUsize, pin::Pin, task::Poll, time};
 
 const REQUEST_TIMEOUT_SEC: u64 = 40;
 /// Interval at which we perform time based maintenance

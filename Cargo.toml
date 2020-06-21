@@ -10,6 +10,7 @@ version = '0.1.0'
 [workspace]
 members = [
     "node/network",
+    "node/consensus",
     "utils/nettool"
 #    "cli",
 #    "component/primitives",
